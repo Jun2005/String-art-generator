@@ -2,9 +2,17 @@
 const detailsBtn = document.getElementById("details-button");
 const detailsContainer = document.getElementById("details-container");
 const initialSettingsContainer = document.getElementById("initial-settings-container");
+const fileTypeInput = document.getElementById("file-type-input");
+const imgInputContainer = document.getElementById("img-input-container");
 const imgInput = document.getElementById("img-input");
-const fileNameEl = document.getElementById("file-name");
+const imgFileNameEl = document.getElementById("img-file-name");
 const previewContainer = document.getElementById("preview-container");
+const vidInputContainer = document.getElementById("vid-input-container");
+const fpsInput = document.getElementById("fps-input");
+const numberOfFramesInput = document.getElementById("number-of-frames-input");
+const vidInput = document.getElementById("vid-input");
+const vidFileNameEl = document.getElementById("vid-file-name");
+const vidEl = document.getElementById("vid-element");
 const topLeftCropEl = document.getElementById("top-left-crop");
 const bottomRightCropEl = document.getElementById("bottom-right-crop");
 const dragCropEl = document.getElementById("drag-crop");
@@ -170,6 +178,7 @@ function getImage(){
     sideLength = img.width * (bottomRightCropRect.right - topLeftCropRect.left)/400;
     srcPosX = img.width * (topLeftCropRect.left - previewContainerRect.left)/400;
     srcPosY = img.height * (topLeftCropRect.top - previewContainerRect.top)/(400*img.naturalHeight/img.naturalWidth);
+
     ctx.drawImage(img, srcPosX, srcPosY, sideLength, sideLength, imgCanvasEl.width*0.05, imgCanvasEl.width*0.05, imgCanvasEl.width*0.9, imgCanvasEl.height*0.9);
     refCtx.drawImage(img, srcPosX, srcPosY, sideLength, sideLength, imgCanvasEl.width*0.05, imgCanvasEl.width*0.05, imgCanvasEl.width*0.9, imgCanvasEl.height*0.9);
     //Sets the imgData array
@@ -190,6 +199,122 @@ function getImage(){
   };
 }
 
+function generateVideo(){
+  vidEl.src = URL.createObjectURL(vidInput.files[0]);
+  vidEl.onloadeddata = async () => {
+    //Sets the circular crop
+    ctx.beginPath();
+    ctx.arc(imgCanvasEl.width/2, imgCanvasEl.width/2, imgCanvasEl.width*0.9/2, 0, Math.PI*2);
+    ctx.closePath();
+    ctx.save();
+    ctx.clip();
+    //Draw image
+    const topLeftCropRect = topLeftCropEl.getBoundingClientRect();
+    const bottomRightCropRect = bottomRightCropEl.getBoundingClientRect();
+    const previewContainerRect = previewContainer.getBoundingClientRect();
+    ctx.globalAlpha = parseFloat(referenceOpacityInput.value);
+    sideLength = vidEl.videoWidth * (bottomRightCropRect.right - topLeftCropRect.left)/400;
+    srcPosX = vidEl.videoWidth * (topLeftCropRect.left - previewContainerRect.left)/400;
+    srcPosY = vidEl.videoHeight * (topLeftCropRect.top - previewContainerRect.top)/(400*vidEl.videoHeight/vidEl.videoWidth);
+
+    vidEl.pause();
+    vidEl.currentTime = 0;
+    recordedChunks = [];
+    const stream = exportCanvasEl.captureStream(parseInt(fpsInput.value));
+    mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/mp4' });
+    
+    mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        recordedChunks.push(event.data);
+      }
+    };
+    
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(recordedChunks, { type: 'video/mp4' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = 'video.mp4';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+    };
+    
+    initialSettingsContainer.style.display = "none";
+    detailsBtn.style.display = "none";
+    detailsContainer.style.display = "none";
+    resetLoadBar();
+    loadBarContainer.style.display = "block";
+    mediaRecorder.start();
+    let frameCount = 0;
+    const totalFrames = parseInt(numberOfFramesInput.value);
+    for (frameCount = 0; frameCount < totalFrames; frameCount++) {
+      updateLoadBar(totalFrames,frameCount);
+      mediaRecorder.pause();
+      vidEl.currentTime += frameCount/parseInt(fpsInput.value);
+      await waitForSeek();
+      await drawFrame();
+      mediaRecorder.resume();
+      await new Promise((resolve) => setTimeout(resolve, 1000 / parseInt(fpsInput.value)));
+    }
+    mediaRecorder.stop();
+    initialSettingsContainer.style.display = "grid";
+    detailsBtn.style.display = "block";
+    detailsContainer.style.display = "block";
+    loadBarContainer.style.display = "none";
+  }
+}
+
+function waitForSeek() {
+  return new Promise((resolve) => {
+      function onSeeked() {
+          // Clean up event listener
+          vidEl.removeEventListener('seeked', onSeeked);
+          resolve();
+      }
+      vidEl.addEventListener('seeked', onSeeked);
+  });
+}
+
+function drawFrame(){
+  return new Promise((resolve)=>{
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    ctx.clearRect(0, 0, imgCanvasEl.width, imgCanvasEl.height);
+    refCtx.clearRect(0, 0, refCanvasEl.width, refCanvasEl.height);
+    exportCtx.clearRect(0, 0, exportCanvasEl.width, exportCanvasEl.height);
+
+    ctx.drawImage(vidEl, srcPosX, srcPosY, sideLength, sideLength, imgCanvasEl.width*0.05, imgCanvasEl.width*0.05, imgCanvasEl.width*0.9, imgCanvasEl.height*0.9);
+    refCtx.drawImage(vidEl, srcPosX, srcPosY, sideLength, sideLength, imgCanvasEl.width*0.05, imgCanvasEl.width*0.05, imgCanvasEl.width*0.9, imgCanvasEl.height*0.9);
+    //Sets the imgData array
+    const imgData = refCtx.getImageData(0, 0, refCanvasEl.width, refCanvasEl.height);
+    imgBrightness = [];
+    for(let i=0; i<refCanvasEl.width*refCanvasEl.height*4; i=i+4){
+      imgBrightness.push((imgData.data[i]**2+imgData.data[i+1]**2+imgData.data[i+2]**2)**0.5/441.67296);
+    }
+
+    currentPinIndex = Math.floor(Math.random()*pins);
+    lastPinIndex = -1;
+    addAllStrings(currentPinIndex, lastPinIndex, parseInt(stringsInput.value));
+
+    gl.readPixels(0,0,canvasEl.width,canvasEl.height,gl.RGBA,gl.UNSIGNED_BYTE,artPixel);
+    const imageData = new ImageData(new Uint8ClampedArray(artPixel), exportCanvasEl.width, exportCanvasEl.height);
+    for(let i=0; i<imageData.width*imageData.height*4; i=i+4){
+      imageData.data[i] = 255-imageData.data[i+3];
+      imageData.data[i+1] = 255-imageData.data[i+3];
+      imageData.data[i+2] = 255-imageData.data[i+3];
+      imageData.data[i+3] = 255;
+    }
+    const rightSideUp = new ImageData(exportCanvasEl.width, exportCanvasEl.height);
+    for(let i=0; i<exportCanvasEl.width*exportCanvasEl.height*4; i++){
+      rightSideUp.data[i] = imageData.data[i%(exportCanvasEl.width*4)+exportCanvasEl.width*4*(exportCanvasEl.height-Math.floor(i/(exportCanvasEl.width*4)))];
+    }
+    exportCtx.putImageData(rightSideUp, 0, 0);
+    //exportCtx.drawImage(vidEl, srcPosX, srcPosY, sideLength, sideLength, imgCanvasEl.width*0.05, imgCanvasEl.width*0.05, imgCanvasEl.width*0.9, imgCanvasEl.height*0.9);
+    resolve();
+  });
+}
+
 function resetCropElements(){
   const shorterSide = Math.min(cropRegionCanvasEl.width, cropRegionCanvasEl.height);
   topLeftCropEl.style.left = (cropRegionCanvasEl.width-shorterSide)/2/devicePixelRatio + "px";
@@ -199,12 +324,20 @@ function resetCropElements(){
   updateDragCropEl();
 }
 
-function updateFileName(){
+function updateImageFileName(){
   if(!imgInput.files[0]){
-    fileNameEl.innerText = "";
+    imgFileNameEl.innerText = "";
     return;
   }
-  fileNameEl.innerText = imgInput.files[0].name;
+  imgFileNameEl.innerText = imgInput.files[0].name;
+}
+
+function updateVideoFileName(){
+  if(!vidInput.files[0]){
+    vidFileNameEl.innerText = "";
+    return;
+  }
+  vidFileNameEl.innerText = vidInput.files[0].name;
 }
 
 function showPreviewImage(){
@@ -227,6 +360,32 @@ function showPreviewImage(){
     previewCanvasEl.style.height = 400*ratio+"px";
     cropRegionCanvasEl.style.height = 400*ratio+"px";
     previewCtx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, previewCanvasEl.width, previewCanvasEl.height);
+    resetCropElements();
+    refreshCropRegionCanvas();
+  }
+}
+
+function showPreviewVideo(){
+  if(!vidInput.files[0]){
+    previewContainer.style.display = "none";
+    return;
+  }
+  previewContainer.style.display = "block";
+  vidEl.src = URL.createObjectURL(vidInput.files[0]);
+  vidEl.onloadeddata = () => {
+    vidEl.pause();
+    const ratio = vidEl.videoHeight/vidEl.videoWidth;
+    previewCanvasEl.width = 400*devicePixelRatio;
+    previewCanvasEl.height = 400*devicePixelRatio*ratio;
+    cropRegionCanvasEl.width = 400*devicePixelRatio;
+    cropRegionCanvasEl.height = 400*devicePixelRatio*ratio;
+    previewContainer.style.width = "400px";
+    previewCanvasEl.style.width = "400px";
+    cropRegionCanvasEl.style.width = "400px";
+    previewContainer.style.height = 400*ratio+"px";
+    previewCanvasEl.style.height = 400*ratio+"px";
+    cropRegionCanvasEl.style.height = 400*ratio+"px";
+    previewCtx.drawImage(vidEl, 0, 0, vidEl.videoWidth, vidEl.videoHeight, 0, 0, previewCanvasEl.width, previewCanvasEl.height);
     resetCropElements();
     refreshCropRegionCanvas();
   }
@@ -352,7 +511,7 @@ function onDragCropClick(event){
 
 //Returns true if the inputs are valid
 function checkInputValidity(){
-  if(!Number.isInteger(Number(pinsInput.value)) || !Number.isInteger(Number(stringsInput.value))){
+  if(!Number.isInteger(Number(pinsInput.value)) || !Number.isInteger(Number(stringsInput.value)) || !Number.isInteger(Number(numberOfFramesInput.value)) || !Number.isInteger(Number(fpsInput.value))){
     return false;
   }
   return true;
@@ -363,7 +522,10 @@ function onGenerateClick(){
     alert("Please input whole numbers for the number of pins and strings. No decimals silly.");
     return;
   }
-  if(imgInput.value === ""){
+  if(!fileTypeInput.checked && imgInput.value === ""){
+    alert("You forgot to choose a file silly billy.");
+    return;
+  }else if(fileTypeInput.checked && vidInput.value === ""){
     alert("You forgot to choose a file silly billy.");
     return;
   }
@@ -371,7 +533,12 @@ function onGenerateClick(){
   setPins();
   currentPinIndex = Math.floor(Math.random()*pins);
   lastPinIndex = -1;
-  getImage();
+
+  if(!fileTypeInput.checked){
+    getImage();
+  }else{
+    generateVideo();
+  }
 }
 
 function setPins(){
@@ -427,6 +594,7 @@ function restart(){
   ctx.clearRect(0, 0, imgCanvasEl.width, imgCanvasEl.height);
   refCtx.clearRect(0, 0, refCanvasEl.width, refCanvasEl.height);
   pinsCtx.clearRect(0, 0, pinsCanvasEl.width, pinsCanvasEl.height);
+  exportCtx.clearRect(0, 0, exportCanvasEl.width, exportCanvasEl.height);
 }
 
 function downloadArt(){
@@ -489,7 +657,7 @@ function lineScore(start, end){
   return score/count;
 }
 
-//Draws new line
+//Draws new line one frame at a time
 function addNewStringUpdated(startIndex, indexBefore = -1, amount, num = 1){
   gl.readPixels(0,0,canvasEl.width,canvasEl.height,gl.RGBA,gl.UNSIGNED_BYTE,artPixel);
   artBrightness = [];
@@ -526,9 +694,40 @@ function addNewStringUpdated(startIndex, indexBefore = -1, amount, num = 1){
     menuEl.style.display = "flex";
   }
 }
+//Draws all lines in one go
+function addAllStrings(startIndex, indexBefore = -1, amount, num = 1){
+  gl.readPixels(0,0,canvasEl.width,canvasEl.height,gl.RGBA,gl.UNSIGNED_BYTE,artPixel);
+  artBrightness = [];
+  for(let i=0; i<refCanvasEl.width*refCanvasEl.height*4; i=i+4){
+    artBrightness.push(1 - artPixel[i+3]/255);
+  }
+
+  const bestLine = {
+    index: -1,
+    score: -99,
+  }
+  for(let i=0;i<pinPos.length;i++){
+    if(i === startIndex || i === indexBefore){
+      continue;
+    }
+    let score = lineScore(pinPos[startIndex], pinPos[i]);
+    if(score > bestLine.score){
+      bestLine.score = score;
+      bestLine.index = i;
+    }
+  }
+  drawLine(pinPosUv[startIndex], pinPosUv[bestLine.index],parseFloat(stringThicknessInput.value),parseFloat(stringOpacityInput.value));
+  currentPinIndex = bestLine.index;
+  lastPinIndex = startIndex;
+  if(num < amount){
+    addAllStrings(currentPinIndex, lastPinIndex, amount, num+1);
+  }
+}
 //#endregion
 //#endregion
 
+let mediaRecorder;
+let recordedChunks = [];
 const artPixel = new Uint8Array(4*refCanvasEl.width*refCanvasEl.height);
 let imgBrightness = [];
 let artBrightness = [];
@@ -547,9 +746,24 @@ addBtn.addEventListener("click", onAddClick);
 referenceOpacityInput.addEventListener("input", redrawImage);
 restartBtn.addEventListener("click", restart);
 downloadBtn.addEventListener("click", downloadArt);
+fileTypeInput.addEventListener("change", ()=>{
+  if(fileTypeInput.checked){
+    imgInputContainer.style.display = "none";
+    vidInputContainer.style.display = "grid";
+    showPreviewVideo();
+  }else{
+    vidInputContainer.style.display = "none";
+    imgInputContainer.style.display = "grid";
+    showPreviewImage();
+  }
+});
 imgInput.addEventListener("change", ()=>{
-  updateFileName();
+  updateImageFileName();
   showPreviewImage();
+});
+vidInput.addEventListener("change", ()=>{
+  updateVideoFileName();
+  showPreviewVideo();
 });
 topLeftCropEl.addEventListener("mousedown", onTopLeftCropClick);
 bottomRightCropEl.addEventListener("mousedown", onBottomRightCropClick);
