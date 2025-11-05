@@ -6,7 +6,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Playwrite+HR:wght@100..400&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Basic&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <link rel="shortcut icon" href="#">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   </head>
     
@@ -40,51 +39,12 @@
     </div>
 
     <div id="initial-settings-container">
-      <label for="pins-input" class="grid-col-1">Number of pins :</label>
-      <input id="pins-input" type="number" min="50" max="500" step="1" value="200" class="grid-col-3" required>
-
-      <label for="strings-input" class="grid-col-1">Number of strings :</label>
-      <input id="strings-input" type="number" min="1" max="4000" step="1" value="100" class="grid-col-3" required>
-
-      <label for="string-opacity-input" class="grid-col-1">String opacity (0~1) :</label>
-      <input id="string-opacity-input" type="number" min="0" max="1" value="0.20" class="grid-col-3" required>
-      
-      <label for="string-thickness-input" class="grid-col-1">String thickness :</label>
-      <input id="string-thickness-input" type="number" min="0" max="0.01" value="0.002" class="grid-col-3" required>
-      
-      <div class="file-type-picker-container grid-col-all">
-        Image
-        <label class="switch">
-          <input type="checkbox" id="file-type-input">
-          <span class="toggle-slider round"></span>
-        </label>
-        Video
+      <label for="img-input" class="grid-col-1">Image to stringify : </label>
+      <div class="grid-col-3">
+        <label for="img-input" class="button" id="choose-file-button">Choose file</label>
+        <p id="file-name"></p>
       </div>
-
-      <div class="grid-col-all" id="img-input-container">
-        <label for="img-input" class="grid-col-1">Image to stringify : </label>
-        <div class="grid-col-3">
-          <label for="img-input" class="button" id="choose-file-button">Choose file</label>
-          <p id="img-file-name"></p>
-        </div>
-        <input id="img-input" type="file" accept="image/*" required>
-      </div>
-
-      <div class="grid-col-all" id="vid-input-container" style="display: none;">
-        <label for="fps-input" class="grid-col-1">Frames per second :</label>
-        <input id="fps-input" type="number" min="1" max="30" step="1" value="6" class="grid-col-3" required>
-        <label for="number-of-frames-input" class="grid-col-1">Number of frames :</label>
-        <input id="number-of-frames-input" type="number" min="1" step="1" value="30" class="grid-col-3" required>
-        <label for="vid-input" class="grid-col-1">Video to stringify : </label>
-        <div class="grid-col-3">
-          <label for="vid-input" class="button" id="choose-file-button">Choose file</label>
-          <p id="vid-file-name"></p>
-        </div>
-        <input id="vid-input" type="file" accept="video/*" required>
-        <video style="display: block; width: 0px; height: 0px;" id="vid-element" autoplay>
-          <source type="video/mp4">
-        </video>
-      </div>
+      <input id="img-input" type="file" accept="image/*" required>
 
       <div id="preview-container">
         <canvas id="preview-canvas"></canvas>
@@ -93,6 +53,18 @@
         <div id="bottom-right-crop"></div>
         <div id="drag-crop"></div>
       </div>
+
+      <label for="pins-input" class="grid-col-1">Number of pins :</label>
+      <input id="pins-input" type="number" min="50" max="500" step="1" value="200" class="grid-col-3" required>
+
+      <label for="strings-input" class="grid-col-1">Number of strings :</label>
+      <input id="strings-input" type="number" min="1" max="4000" step="1" value="100" class="grid-col-3" required>
+
+      <label for="string-opacity-input" class="grid-col-1">String opacity (0~1) :</label>
+      <input id="string-opacity-input" type="number" min="0" max="1" value="0.20" class="grid-col-3" required>
+
+      <label for="string-thickness-input" class="grid-col-1">String thickness :</label>
+      <input id="string-thickness-input" type="number" min="0" max="0.01" value="0.002" class="grid-col-3" required>
 
       <button type="button" id="generate-btn" class="button">Generate</button>
     </div>

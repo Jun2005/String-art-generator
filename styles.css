@@ -5,7 +5,7 @@
   font-family: "Basic", 'Segoe UI';
   font-size: 20px;
   color: #212123;
-  /* border: 1px solid black; */
+  /*border: 1px solid black;*/
 }
 
 body{
@@ -145,19 +145,6 @@ body{
 }
 .grid-col-5{
   grid-column: 5;
-}
-.grid-col-all{
-  grid-column: 1/4;
-}
-
-.file-type-picker-container{
-  margin: auto;
-}
-
-#img-input-container, #vid-input-container{
-  display: grid;
-  grid-template-columns: 45% 5% 50%;
-  row-gap: 10px;
 }
 
 input[type="file"]{
@@ -337,69 +324,5 @@ input[type=number] {
   background: #212123; 
   border-radius: 50%;
   cursor: pointer;
-}
-/* #endregion */
-
-/* #region Toggle switch CSS */
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 60px;
-  height: 20px;
-  top: 4px;
-}
-
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.toggle-slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 100%;
-  border: 2px solid #212123;
-  background-color: #ccc;
-  -webkit-transition: .4s;
-  transition: .4s;
-}
-
-.toggle-slider:before {
-  position: absolute;
-  content: "";
-  height: 17px;
-  width: 17px;
-  left: 0px;
-  bottom: 0px;
-  background-color: #8ab060;
-  -webkit-transition: .4s;
-  transition: .4s;
-}
-
-input:checked + .toggle-slider {
-  background-color: #c2d368;
-}
-
-input:focus + .toggle-slider {
-  box-shadow: 0 0 1px #c2d368;
-}
-
-input:checked + .toggle-slider:before {
-  -webkit-transform: translateX(40px);
-  -ms-transform: translateX(40px);
-  transform: translateX(40px);
-}
-
-.toggle-slider.round {
-  border-radius: 10px;
-}
-
-.toggle-slider.round:before {
-  border-radius: 50%;
 }
 /* #endregion */
