@@ -502,7 +502,7 @@ function addNewStringUpdated(startIndex, indexBefore = -1, amount, num = 1){
     score: -99,
   }
   for(let i=0;i<pinPos.length;i++){
-    if(i === startIndex || i === indexBefore){
+    if((startIndex-5)%pinPos.length < i && (startIndex+5)%pinPos.length > i){
       continue;
     }
     let score = lineScore(pinPos[startIndex], pinPos[i]);
