@@ -3,7 +3,7 @@
 
 https://jun2005.github.io/StringArtGenerator/
 
-This simple website creates string art from a chosen image. You can change the parameters to your liking.
+This website creates string art from a chosen image. You can change the parameters to your liking.
 
 ### Number of pins:
 - The number of points around the circular canvas from which a string/line can start. The larger the number, the more detailed the final art piece will be. It will also take longer to process the more pins there are.
