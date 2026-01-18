@@ -1,7 +1,7 @@
 # String Art Generator
 <img width="806" height="463" alt="string art" src="https://github.com/user-attachments/assets/6c8c64c9-d18c-478f-b7c1-f2dbacd979a3" />  
 
-https://jun2005.github.io/StringArtGenerator/
+https://jun2005.github.io/String-art-generator/
 
 This website creates string art from a chosen image. You can change the parameters to your liking.
 
