@@ -1,4 +1,6 @@
 # String Art Generator
+<img width="806" height="944" alt="Document" src="https://github.com/user-attachments/assets/8c96989c-b791-4228-a1c2-2da7668716c2" />
+
 <img width="806" height="463" alt="string art" src="https://github.com/user-attachments/assets/6c8c64c9-d18c-478f-b7c1-f2dbacd979a3" />  
 
 https://jun2005.github.io/String-art-generator/
